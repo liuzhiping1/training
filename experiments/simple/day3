@@ -1,0 +1,26 @@
+1. gdb attach多线程
+use gdb to dump mutex owner
+training/thread/deadlock
+
+2. perf sched
+training/debug/perf-sched: readme
+sudo perf sched record sleep 5
+sudo perf timechart
+firefox output.svg
+
+3. oprofile
+# sudo opcontrol --reset
+Signalling daemon... done
+# sudo opcontrol --init
+# sudo opcontrol --start
+Profiler running.
+# sudo opcontrol --dump
+# opreport -la
+# sudo opcontrol --stop
+
+4. posix进程间通信
+~/develop/training/process/posix-ipc
+观察/dev/shm/xxx
+
+5. 异步信号同步化
+~/develop/training/thread/signalsync.c 
