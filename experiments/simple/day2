@@ -4,7 +4,7 @@
 调整group的cpu.shares,cpu.cfs_quota_us
 ~/develop/training/thread/thread_life.c
 
-2. 分析taskset用修改线程affinity
+2. taskset修改线程affinity
 ~/develop/training/thread/thread_life.c运行,设置不同的cpu affinity: 01, 02, 03
 taskset -a -p 02 `pidof a.out`
 
@@ -14,35 +14,29 @@ taskset -a -p 02 `pidof a.out`
 	$ smem --bar=command
 
 4. 做I/O动作，观察page cache变化
-drop cache at first:
-root@baohua-VirtualBox:/proc/sys/vm# echo 3 > drop_caches
+先放弃cache：
+进入/proc/sys/vm目录，执行
+sudo sh -c 'echo 3 > drop_caches'
+执行
+free
+访问硬盘
+#sudo sh -c 'cat /dev/sda1 > /dev/null'
+再次执行
+free
 
-#free
-#cat /dev/sda1 > /dev/null
-#free
-
-compare the output of the two free
+对比两次free的输出
 
 5. 运行一个引起OOM的程序
 $ sudo swapoff -a
 $ sudo sh -c 'echo 1 > /proc/sys/vm/overcommit_memory'
 
-firefox.....
-
-run: training/debug/mm/munch.c
+编译并运行: ~/develop/training/debug/mm/munch.c
 #dmesg
+
+运行firefox，改firefox oom_adj使得firefox的oom_score变大，再次运行~/develop/training/debug/mm/munch.c
 
 6. 观察一个进程的代码段rss/pss的变化
 运行1份./a.out
 运行2份./a.out
 运行3份./a.out
 查看/proc/<a.out-pid>/smaps文件第一段
-
-7. 观察一个进程在运行中代码段等的swapping out
-
-launch firefox
-cat /proc/firefox-pid/smaps > 1
-run: training/debug/mm/munch.c
-cat /proc/firefox-pid/smaps > 2
-compare 1 and 2 by meld
-
