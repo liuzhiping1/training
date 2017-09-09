@@ -4,6 +4,29 @@
 调整group的cpu.shares,cpu.cfs_quota_us
 ~/develop/training/thread/thread_life.c
 
+```Bash
+/sys/fs/cgroup/cpu
+
+/sys/fs/cgroup/cpu$ sudo mkdir A
+/sys/fs/cgroup/cpu$ sudo mkdir B
+
+
+/sys/fs/cgroup/cpu/A$ sudo sh -c 'echo 16966 > cgroup.procs'
+/sys/fs/cgroup/cpu/A$ sudo sh -c 'echo 16986 > cgroup.procs'
+
+
+/sys/fs/cgroup/cpu/B$ sudo sh -c 'echo 17006 > cgroup.procs'
+
+/sys/fs/cgroup/cpu/A$ sudo sh -c 'echo 2048 > cpu.shares'
+
+
+baohua@baohua-VirtualBox:/sys/fs/cgroup/cpu/A$ cat cpu.cfs_period_us
+100000
+baohua@baohua-VirtualBox:/sys/fs/cgroup/cpu/A$ cat cpu.cfs_quota_us
+-1
+baohua@baohua-VirtualBox:/sys/fs/cgroup/cpu/A$ sudo sh -c 'echo 20000 > cpu.cfs_quota_us'
+```
+
 2. taskset修改线程affinity
 ~/develop/training/thread/thread_life.c运行,设置不同的cpu affinity: 01, 02, 03
 taskset -a -p 02 `pidof a.out`
