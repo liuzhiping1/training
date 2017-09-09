@@ -36,6 +36,12 @@ taskset -a -p 02 `pidof a.out`
 	$ smem --pie=comand
 	$ smem --bar=command
 
+
+## 做如下实验前，先执行：
+
+		sudo swapoff -a
+		sudo sh -c 'echo 1 > /proc/sys/vm/overcommit_memory'
+
 4. 做I/O动作，观察page cache变化
 先放弃cache：
 进入/proc/sys/vm目录，执行
@@ -57,6 +63,18 @@ $ sudo sh -c 'echo 1 > /proc/sys/vm/overcommit_memory'
 #dmesg
 
 运行firefox，改firefox oom_adj使得firefox的oom_score变大，再次运行~/develop/training/debug/mm/munch.c
+
+```Bash
+OOM:
+baohua@baohua-VirtualBox:/proc/17287$ echo 5 > oom_adj 
+baohua@baohua-VirtualBox:/proc/17287$ cat oom_score
+354
+baohua@baohua-VirtualBox:/proc/17287$ echo 8 > oom_adj 
+baohua@baohua-VirtualBox:/proc/17287$ cat oom_score
+530
+
+/proc/17287$ sudo sh -c 'echo 10 > oom_adj'
+```
 
 6. 观察一个进程的代码段rss/pss的变化
 运行1份./a.out
