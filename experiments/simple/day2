@@ -37,10 +37,11 @@ taskset -a -p 02 `pidof a.out`
 	$ smem --bar=command
 
 
-## 做如下实验前，先执行：
+--------------- 做如下实验前，先执行：
 
 		sudo swapoff -a
 		sudo sh -c 'echo 1 > /proc/sys/vm/overcommit_memory'
+--------------
 
 4. 做I/O动作，观察page cache变化
 先放弃cache：
