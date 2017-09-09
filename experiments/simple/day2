@@ -3,8 +3,11 @@
 在/sys/fs/cgroup/cpu创建2个group，然后把放到不同group，
 调整group的cpu.shares,cpu.cfs_quota_us
 ~/develop/training/thread/thread_life.c
+编译
+gcc thread_life.c -pthread
 
 ```Bash
+跑3个a.out， 1,2进群A， 3进群B。
 /sys/fs/cgroup/cpu
 
 /sys/fs/cgroup/cpu$ sudo mkdir A
@@ -19,7 +22,7 @@
 
 /sys/fs/cgroup/cpu/A$ sudo sh -c 'echo 2048 > cpu.shares'
 
-
+杀掉后2个a.out，只留下第一个a.out
 baohua@baohua-VirtualBox:/sys/fs/cgroup/cpu/A$ cat cpu.cfs_period_us
 100000
 baohua@baohua-VirtualBox:/sys/fs/cgroup/cpu/A$ cat cpu.cfs_quota_us
@@ -31,9 +34,11 @@ baohua@baohua-VirtualBox:/sys/fs/cgroup/cpu/A$ sudo sh -c 'echo 20000 > cpu.cfs_
 ~/develop/training/thread/thread_life.c运行,设置不同的cpu affinity: 01, 02, 03
 taskset -a -p 02 `pidof a.out`
 
+top
+
 3. 用smem观察进程的内存变化
 	$ smem
-	$ smem --pie=comand
+	$ smem --pie=command
 	$ smem --bar=command
 
 
@@ -81,4 +86,4 @@ baohua@baohua-VirtualBox:/proc/17287$ cat oom_score
 运行1份./a.out
 运行2份./a.out
 运行3份./a.out
-查看/proc/<a.out-pid>/smaps文件第一段
+查看/proc/<a.out-pid>/smaps | more文件第一段
