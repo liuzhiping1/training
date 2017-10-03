@@ -29,13 +29,15 @@
 #include <linux/hrtimer.h>
 
 #define CARDNAME "lep-eth"
-#define LEP_PACKETIN_INTERVAL 100000
+#define LEP_PACKETIN_INTERVAL 1
 #define INCOMING_PACKET_LEN   200
+#define DRV_NAME        "lep eth"
+#define DRV_VERSION     "0.01"
+
 struct lep_eth_priv {
 	spinlock_t lock;
 	struct hrtimer timer;
 	struct net_device *ndev;
-	unsigned char pkt[INCOMING_PACKET_LEN]; /* a pesudo incoming packet */
 };
 
 static int
@@ -50,34 +52,55 @@ lep_eth_hard_start_xmit(struct sk_buff *skb, struct net_device *ndev)
 
 static void lep_eth_receive(struct net_device *ndev)
 {
-	struct lep_eth_priv *priv = netdev_priv(ndev);
-	unsigned char *data;
 	struct sk_buff *skb;
-	int len = INCOMING_PACKET_LEN;
+	/*
+	 * i captured a packet from smsc911x, it is as below
+	 * and i have no idea about the details of the pkt
+	 */
+	int pktlength = 58;
+	int pktwords = 15;
+	unsigned int pkts[] = {
+		0x54520000, 0x56341200, 0x000a5552, 0x00080202, 0x28000045, 0x00002000, 0xa0620640, 0x00000000,
+		0x0f02000a, 0xd304c9a4, 0x73ef2c00, 0xb73f2990, 0x38221050, 0x00006f0c, 0xac05fee7
+	};
 
-	skb = netdev_alloc_skb(ndev, len);
+	skb = netdev_alloc_skb(ndev, pktwords << 2);
 	if (unlikely(skb == NULL)) {
 		ndev->stats.rx_dropped++;
 		return;
 	}
 
-	data = skb_put(skb, len);
-	memcpy(data, priv->pkt, len);
+	memcpy(skb->data, pkts, pktwords << 2);
+
+	/* Align IP on 16B boundary */
+	skb_reserve(skb, NET_IP_ALIGN);
+	skb_put(skb, pktlength - 4);
 	skb->protocol = eth_type_trans(skb, ndev);
+	skb_checksum_none_assert(skb);
 	netif_rx(skb);
+
 	ndev->stats.rx_packets++;
-	ndev->stats.rx_bytes += len;
+	ndev->stats.rx_bytes += (pktlength - 4);
 }
 
 static int lep_eth_open(struct net_device *ndev)
 {
+	struct lep_eth_priv *priv = netdev_priv(ndev);
+
 	netif_start_queue(ndev);
+
+	hrtimer_start(&priv->timer, ns_to_ktime(LEP_PACKETIN_INTERVAL),
+			HRTIMER_MODE_REL);
 
 	return 0;
 }
 
 static int lep_eth_close(struct net_device *ndev)
 {
+	struct lep_eth_priv *priv = netdev_priv(ndev);
+
+	hrtimer_cancel(&priv->timer);
+
 	netif_stop_queue(ndev);
 
 	return 0;
@@ -114,6 +137,17 @@ static enum hrtimer_restart lep_timer_callback(struct hrtimer *hrt)
 	return HRTIMER_RESTART;
 }
 
+static void netdev_get_drvinfo(struct net_device *dev,
+                               struct ethtool_drvinfo *info)
+{
+        strlcpy(info->driver, DRV_NAME, sizeof(info->driver));
+        strlcpy(info->version, DRV_VERSION, sizeof(info->version));
+}
+
+static const struct ethtool_ops netdev_ethtool_ops = {
+        .get_drvinfo            = netdev_get_drvinfo,
+};
+
 static int lep_eth_drv_probe(struct platform_device *pdev)
 {
 	struct lep_eth_priv *priv;
@@ -128,11 +162,14 @@ static int lep_eth_drv_probe(struct platform_device *pdev)
 
 	priv = netdev_priv(ndev);
 	spin_lock_init(&priv->lock);
-	
+	priv->ndev = ndev;
+
 	/* we use this timer to simulate incoming packets */
 	hrtimer_init(&priv->timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 	priv->timer.function = lep_timer_callback;
 
+	eth_hw_addr_random(ndev);
+	ndev->ethtool_ops = &netdev_ethtool_ops;
 	ndev->netdev_ops = &lep_eth_netdev_ops;
 	ndev->watchdog_timeo = msecs_to_jiffies(5000);
 
