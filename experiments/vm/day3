@@ -26,11 +26,19 @@ Profiler running.
 调整 /sys/class/net/eth0/queues/rx-0/rps_cpus迁移软中断,cat /proc/softirqs观察变化;
 
 6. lttng
-run lttv-gui and read lttng result: training/debug/lttng-traced-data
+run lttv-gui and read lttng result: training/debug/lttng-traced-data  2.6.38....
 
 7. posix进程间通信
 ~/develop/training/process/posix-ipc
 观察/dev/shm/xxx
 
 8. 异步信号同步化
-~/develop/training/thread/signalsync.c 
+~/develop/training/thread/signalsync.c
+
+9. ~/develop/training/FlameGraph
+gcc -g -pthread exam.c
+./a.out&
+sudo ./exam.sh
+firefox perf-kernel.svg
+
+
