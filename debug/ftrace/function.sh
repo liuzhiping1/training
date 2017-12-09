@@ -5,8 +5,8 @@ echo nop > $debugfs/tracing/current_tracer
 echo 0 > $debugfs/tracing/tracing_on
 echo $$ > $debugfs/tracing/set_ftrace_pid
 echo function_graph > $debugfs/tracing/current_tracer
-#replace vfs_write by your function name
-echo vfs_write > $debugfs/tracing/set_graph_function
+#replace test_proc_show by your function name
+echo test_proc_show > $debugfs/tracing/set_graph_function
 echo 1 > $debugfs/tracing/tracing_on
 exec "$@" 
 
