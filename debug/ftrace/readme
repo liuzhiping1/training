@@ -17,3 +17,5 @@ cat /sys/kernel/debug/tracing/trace
 ../../perf-tools/bin/kprobe 'r:test_proc_write $retval'
 
 ../../perf-tools/bin/uprobe 'r:bash:readline +0($retval):string'
+
+../../perf-tools/bin/uprobe -l bash
