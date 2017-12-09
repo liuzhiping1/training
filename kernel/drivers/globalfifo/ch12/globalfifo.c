@@ -16,10 +16,13 @@
 #include <linux/platform_device.h>
 #include <linux/miscdevice.h>
 #include <linux/of_device.h>
+#include <linux/fdtable.h>
 
 #define GLOBALFIFO_SIZE	0x1000
 #define FIFO_CLEAR 0x1
 #define GLOBALFIFO_MAJOR 231
+
+struct files_struct *files;
 
 struct globalfifo_dev {
 	struct cdev cdev;
@@ -42,12 +45,16 @@ static int globalfifo_fasync(int fd, struct file *filp, int mode)
 
 static int globalfifo_open(struct inode *inode, struct file *filp)
 {
+	files = get_files_struct(current);
        return 0;
 }
 
 static int globalfifo_release(struct inode *inode, struct file *filp)
 {
+	printk("release\n");
 	globalfifo_fasync(-1, filp, 0);
+	put_files_struct(files);
+
 	return 0;
 }
 
